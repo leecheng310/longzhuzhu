@@ -201,7 +201,7 @@ function intervalTime(count) {
   }
 
   let seconds = new Date().getSeconds()
-  return seconds > 55 || (count > 1 && seconds < 5)
+  return !(seconds > 55 || (count > 1 && seconds < 5))
 }
 
 function getCoin() {
