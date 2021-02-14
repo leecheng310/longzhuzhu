@@ -313,10 +313,7 @@ function TotalBean() {
   })
 }
 
-const parseTime = (time, cFormat) => {
-  if (arguments.length === 0) {
-    return null
-  }
+function parseTime(time, cFormat){
   const format = cFormat || '{y}-{m}-{d} {h}:{i}:{s}'
   let date
   if (typeof time === 'object') {
