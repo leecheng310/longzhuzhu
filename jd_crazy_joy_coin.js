@@ -201,7 +201,7 @@ function intervalTime(count) {
   }
 
   let second = parseInt(parseTime(new Date() + (8 * 60 * 60 * 1000), "{ss}"))
-  let timeAbs = Math.abs(second - (count+1) * crazyJoyCoinsInterval)
+  let timeAbs = Math.abs(second - count * crazyJoyCoinsInterval)
   console.log(timeAbs)
   return  timeAbs < crazyJoyCoinsInterval
 }
