@@ -9,7 +9,8 @@
 
  === 圈X
  圈X最多支持分钟维度,30分钟一次
- 30 * * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_crazy_joy_coin.js
+ 30 * * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_crazy_joy_compose.js, tag=crazyJoy合成任务, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_crazy_joy.png, enabled=true
+
  ***/
 
 const $ = new Env('crazyJoy挂机合成');
