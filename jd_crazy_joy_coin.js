@@ -16,13 +16,14 @@ const $ = new Env('crazyJoy挂机金币');
 const JD_API_HOST = 'https://api.m.jd.com/';
 
 // 收金币运行次数
-const crazyJoyCoinsTimes = $.isNode() ? 1 : 8
+const crazyJoyCoinsTimes = $.isNode() ? 1 : 9
 // 收金币间隔秒数
-const crazyJoyCoinsInterval = 4.5
+const crazyJoyCoinsInterval = 4.8
 
 const notify = $.isNode() ? require('./sendNotify') : '';
 let cookiesArr = [], cookie = '', message = '';
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
+
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
     cookiesArr.push(jdCookieNode[item])
@@ -161,7 +162,7 @@ if ($.isNode()) {
   }
   let count = 0
 
-  while (count < crazyJoyCoinsTimes) {
+  while (count < crazyJoyCoinsTimes && intervalTime(count)) {
     count++
     console.log(`============开始第${count}次挂机=============`)
     for (let i = 0; i < cookiesArr.length; i++) {
@@ -189,6 +190,21 @@ if ($.isNode()) {
     .finally(() => {
       $.done();
     })
+
+/**
+ * 时间判断
+ * 圈X任务多时造成延时过多, 退出任务, 避免重复执行
+ */
+function intervalTime(count) {
+  if($.isNode()){
+    return true
+  }
+
+  let second = parseInt(parseTime(new Date() + (8 * 60 * 60 * 1000), "{ss}"))
+  let timeAbs = Math.abs(second - (count+1) * crazyJoyCoinsInterval)
+  console.log(timeAbs)
+  return  timeAbs < crazyJoyCoinsInterval
+}
 
 function getCoin() {
   return new Promise(async resolve => {
@@ -295,6 +311,38 @@ function TotalBean() {
       }
     })
   })
+}
+
+const parseTime = (time, cFormat) => {
+  if (arguments.length === 0) {
+    return null
+  }
+  const format = cFormat || '{y}-{m}-{d} {h}:{i}:{s}'
+  let date
+  if (typeof time === 'object') {
+    date = time
+  } else {
+    if (('' + time).length === 10) time = parseInt(time) * 1000
+    date = new Date(time)
+  }
+  const formatObj = {
+    y: date.getFullYear(),
+    m: date.getMonth() + 1,
+    d: date.getDate(),
+    h: date.getHours(),
+    i: date.getMinutes(),
+    s: date.getSeconds(),
+    a: date.getDay()
+  }
+  const time_str = format.replace(/{(y|m|d|h|i|s|a)+}/g, (result, key) => {
+    let value = formatObj[key]
+    if (key === 'a') return ['一', '二', '三', '四', '五', '六', '日'][value - 1]
+    if (result.length > 0 && value < 10) {
+      value = '0' + value
+    }
+    return value || 0
+  })
+  return time_str
 }
 
 function jsonParse(str) {
