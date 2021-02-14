@@ -16,9 +16,9 @@ const $ = new Env('crazyJoy挂机金币');
 const JD_API_HOST = 'https://api.m.jd.com/';
 
 // 收金币运行次数
-const crazyJoyCoinsTimes = $.isNode() ? 1 : 10
+const crazyJoyCoinsTimes = $.isNode() ? 1 : 8
 // 收金币间隔秒数
-const crazyJoyCoinsInterval = 5
+const crazyJoyCoinsInterval = 4.5
 
 const notify = $.isNode() ? require('./sendNotify') : '';
 let cookiesArr = [], cookie = '', message = '';
