@@ -16,9 +16,9 @@ const $ = new Env('crazyJoy挂机金币');
 const JD_API_HOST = 'https://api.m.jd.com/';
 
 // 收金币运行次数
-const crazyJoyCoinsTimes = $.isNode() ? 1 : 9
+const crazyJoyCoinsTimes = $.isNode() ? 1 : 10
 // 收金币间隔秒数
-const crazyJoyCoinsInterval = 4.8
+const crazyJoyCoinsInterval = 5
 
 const notify = $.isNode() ? require('./sendNotify') : '';
 let cookiesArr = [], cookie = '', message = '';
@@ -193,18 +193,15 @@ if ($.isNode()) {
 
 /**
  * 时间判断
- * 圈X任务多时造成延时过多, 退出任务, 避免重复执行
+ * 圈X任务多时造成延时过多, 自动退出任务, 避免重复执行
  */
 function intervalTime(count) {
   if($.isNode()){
     return true
   }
 
-  let second = new Date().getSeconds()
-  let interval = count * crazyJoyCoinsInterval
-  let timeAbs = Math.abs(second - interval)
-  console.log(`second=${second}, interval=${interval}, abs=${timeAbs}`)
-  return  timeAbs < crazyJoyCoinsInterval
+  let seconds = new Date().getSeconds()
+  return seconds > 55 || (count > 1 && seconds < 5)
 }
 
 function getCoin() {
