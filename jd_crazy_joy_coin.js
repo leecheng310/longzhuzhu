@@ -8,7 +8,7 @@
  0/5 * * * * * * 表示每8秒触发一次
 
 === 圈X
-圈X最多支持分钟维度,建议10分钟一次, 120次
+圈X最多支持分钟维度,建议1分钟一次, 每分钟跑10次
  0/1 * * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_crazy_joy_coin.js, tag=crazyJoy金币任务, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_crazy_joy.png, enabled=true
  ***/
 
