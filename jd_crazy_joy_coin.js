@@ -200,8 +200,6 @@ function getCoin() {
         } else {
           if (safeGet(data)) {
             data = JSON.parse(data);
-            $.log(JSON.stringify(data))
-
             if (data.data && data.data.tryMoneyJoyBeans) {
               console.log(`分红狗生效中，预计获得 ${data.data.tryMoneyJoyBeans} 京豆奖励`)
             }
