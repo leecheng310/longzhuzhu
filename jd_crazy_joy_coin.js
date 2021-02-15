@@ -180,8 +180,6 @@ if ($.isNode()) {
     if (crazyJoyCoinsTimes > 1 && count != crazyJoyCoinsTimes){
       await $.wait(crazyJoyCoinsInterval*1000)
     }
-
-    $.log(`\n\n`)
   }
 })()
     .catch((e) => {
@@ -219,12 +217,11 @@ function getCoin() {
             }
             if (data.data && data.data.totalCoinAmount) {
               $.coin = data.data.totalCoinAmount;
-              $.log(`当前金币:${$.coin}\n`)
             } else {
               $.coin = `获取当前金币数量失败`
             }
             if (data.data) {
-              $.log(`此次在线收益：获得 ${data.data['coins']} 金币`)
+              $.log(`在线收益：${data.data['coins']} 金币, 当前 ${$.coin} 金币`)
             }
           }
         }
