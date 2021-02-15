@@ -232,8 +232,6 @@ async function jdCrazyJoy() {
       await buyJoy($.buyJoyLevel)
       await $.wait(1000)
       await getJoyList()
-      await $.wait(1000)
-      await getCoin();
     }
   }
 
