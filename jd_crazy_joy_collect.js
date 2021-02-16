@@ -1,15 +1,20 @@
 /**
  crazy joy
- 疯狗挂机-收金币
- 活动入口：京东APP我的-更多工具-疯狂的JOY
+ 疯狗挂机-收金币任务(仅收金币)
 
-=== 云函数
-建议只执行一次, cron任务5秒一次, 1次
- 0/5 * * * * * * 表示每8秒触发一次
+ === 云函数
+ 建议cron任务6秒一次
+ 0/6 * * * * * *
 
-=== 圈X
-圈X最多支持分钟维度,建议1分钟一次, 每分钟跑10次
+ 说明: 云函数存在冷启动问题cron时间会不准,避免时间错乱
+ 脚本中进行时间判断, 如果非6倍数的秒数会退出循环
+
+ === 圈X
+ 圈X最多支持分钟维度, 1分钟一次, 每分钟跑10次
  0/1 * * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_crazy_joy_coin.js, tag=crazyJoy金币任务, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_crazy_joy.png, enabled=true
+
+ 说明: 圈X多个任务执行时,会导致执行延迟,避免时间错乱
+ 脚本中进行时间判断, 如果超过55秒会退出循环
  ***/
 
 const $ = new Env('crazyJoy挂机金币');
@@ -20,7 +25,7 @@ const crazyJoyCoinsTimes = $.isNode() ? 1 : 10
 // 收金币间隔秒数
 const crazyJoyCoinsInterval = 5
 
-const notify = $.isNode() ? require('./sendNotify') : '';
+const notify = $.isNode() ? require('./sendNotify.js') : '';
 let cookiesArr = [], cookie = '', message = '';
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 
@@ -162,7 +167,7 @@ if ($.isNode()) {
   }
   let count = 0
 
-  while (count < crazyJoyCoinsTimes && intervalTime(count)) {
+  while (count < crazyJoyCoinsTimes && matchTime(count)) {
     count++
     console.log(`============开始第${count}次挂机=============`)
     for (let i = 0; i < cookiesArr.length; i++) {
@@ -191,15 +196,25 @@ if ($.isNode()) {
 
 /**
  * 时间判断
- * 圈X任务多时造成延时过多, 自动退出任务, 避免重复执行
+ * 延时过多, 自动退出任务, 避免重复执行
  */
-function intervalTime(count) {
-  if($.isNode()){
-    return true
-  }
+function matchTime(count) {
 
-  let seconds = new Date().getSeconds()
-  return !(seconds > 55 || (count > 1 && seconds < 5))
+  if ($.isNode()) {
+    let seconds = new Date().getSeconds()
+    let ret = seconds % 6 === 0
+    if(!ret){
+      console.log(`时间非6的倍数, 退出任务`)
+    }
+    return ret
+  } else {
+    let seconds = new Date().getSeconds()
+    let ret = !(seconds > 55 || (count > 1 && seconds < 5))
+    if(!ret){
+      console.log(`时间超过55秒, 退出任务`)
+    }
+    return ret
+  }
 }
 
 function getCoin() {

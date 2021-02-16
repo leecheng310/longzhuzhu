@@ -1,15 +1,14 @@
 /**
  crazy joy
- 疯狗挂机-合成
- 活动入口：京东APP我的-更多工具-疯狂的JOY
+ 疯狗挂机-合成任务(包含开盒子+看视频+合成)
 
  === 云函数
- 建议只执行一次, cron任务30分钟一次
- 0 30 * * * * * 表示每30分钟15秒触发一次
+ 建议cron任务20或者30分钟一次
+ 0 5,25,45 * * * * * 表示小时的5分、25分和45分执行
 
  === 圈X
  圈X最多支持分钟维度,30分钟一次
- 25,55 * * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_crazy_joy_compose.js, tag=crazyJoy合成任务, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_crazy_joy.png, enabled=true
+ 5,25,45 * * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_crazy_joy_compose.js, tag=crazyJoy合成任务, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_crazy_joy.png, enabled=true
 
  ***/
 
