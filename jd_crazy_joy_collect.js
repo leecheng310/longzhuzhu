@@ -1,6 +1,6 @@
 /**
  crazy joy
- 疯狗挂机-收金币任务(仅收金币)
+ 疯狗挂机-收金币任务(收金币+幸运盒子+看视频)
 
  === 云函数
  建议cron任务6秒一次
@@ -11,7 +11,7 @@
 
  === 圈X
  圈X最多支持分钟维度, 1分钟一次, 每分钟跑10次
- 0/1 * * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_crazy_joy_collect.js, tag=crazyJoy金币任务, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_crazy_joy.png, enabled=true
+ 0/1 * * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_crazy_joy_coin.js, tag=crazyJoy金币任务, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_crazy_joy.png, enabled=true
 
  说明: 圈X多个任务执行时,会导致执行延迟,避免时间错乱
  脚本中进行时间判断, 如果超过55秒会退出循环
@@ -204,7 +204,7 @@ function matchTime(count) {
     let seconds = new Date().getSeconds()
     let ret = seconds % 6 === 0
     if(!ret){
-      console.log(`时间非6的倍数, 退出任务`)
+      console.log(`时间不匹配, 退出任务`)
     }
     return ret
   } else {
@@ -234,6 +234,10 @@ function getCoin() {
               $.coin = data.data.totalCoinAmount;
             } else {
               $.coin = `获取当前金币数量失败`
+            }
+            if (data.data && data.data.luckyBoxRecordId) {
+              await openBox('LUCKY_BOX_DROP',data.data.luckyBoxRecordId)
+              await $.wait(1000)
             }
             if (data.data) {
               $.log(`在线收益：${data.data['coins']} 金币, 当前 ${$.coin} 金币`)
@@ -268,6 +272,62 @@ function taskUrl(functionId, body = '', taskCookie = cookie) {
       'Accept-Encoding': 'gzip, deflate, br',
     }
   }
+}
+
+function openBox(eventType = 'LUCKY_BOX_DROP', boxId) {
+  let body = { eventType, "eventRecordId": boxId}
+  return new Promise(async resolve => {
+    $.get(taskUrl('crazyJoy_event_getVideoAdvert', JSON.stringify(body)), async (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} API请求失败，请检查网路重试`)
+        } else {
+          if (safeGet(data)) {
+            data = JSON.parse(data);
+            if (data['success']) {
+              $.log(`点击幸运盒子成功，剩余观看视频次数：${data.data.advertViewTimes}, ${data.data.advertViewTimes > 0 ? '等待32秒' : '跳出'}`)
+              if (data.data.advertViewTimes > 0) {
+                await $.wait(32000)
+                await rewardBox(eventType, boxId);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve();
+      }
+    })
+  })
+}
+
+function rewardBox(eventType, boxId) {
+  let body = { eventType, "eventRecordId": boxId}
+  return new Promise(async resolve => {
+    $.get(taskUrl('crazyJoy_event_obtainAward', JSON.stringify(body)), async (err, resp, data) => {
+      try {
+        if (err) {
+          $.log(`${JSON.stringify(err)}`)
+          $.log(`${$.name} API请求失败，请检查网路重试`)
+        } else {
+          if (safeGet(data)) {
+            data = JSON.parse(data);
+            if (data['success']) {
+              $.log(`幸运盒子奖励领取成功，获得：${data.data.beans}京豆，${data.data.coins}金币`)
+            } else {
+              $.log(`幸运盒子奖励领取失败，错误信息：${data.message || JSON.stringify(data)}`)
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve();
+      }
+    })
+  })
 }
 
 function safeGet(data) {
