@@ -4,10 +4,10 @@
 
  === 云函数
  建议cron任务20或者30分钟一次
- 0 5,25,45 * * * * * 表示小时的5分、25分和45分执行
+ 0 5,25,45 * * * * * 表示每小时的5分、25分和45分执行
 
  === 圈X
- 圈X最多支持分钟维度,30分钟一次
+ 圈X最多支持分钟维度,20分钟一次
  5,25,45 * * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_crazy_joy_compose.js, tag=crazyJoy合成任务, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_crazy_joy.png, enabled=true
 
  ***/
