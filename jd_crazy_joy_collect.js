@@ -11,7 +11,7 @@
 
  === 圈X
  圈X最多支持分钟维度, 1分钟一次, 每分钟跑10次
- 0/1 * * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_crazy_joy_coin.js, tag=crazyJoy金币任务, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_crazy_joy.png, enabled=true
+ 0/1 * * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_crazy_joy_collect.js, tag=crazyJoy金币任务, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jd_crazy_joy.png, enabled=true
 
  说明: 圈X多个任务执行时,会导致执行延迟,避免时间错乱
  脚本中进行时间判断, 如果超过55秒会退出循环
