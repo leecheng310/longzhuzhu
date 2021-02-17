@@ -381,6 +381,7 @@ function getJoyList() {
             //console.log(data)
             if (data.success && data.data.joyIds) {
               $.joyIds = data.data.joyIds
+              $.coin = data.data.totalCoinAmount
             } else
               console.log(`joy信息获取信息失败`)
           }
