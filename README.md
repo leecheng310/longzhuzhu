@@ -8,3 +8,4 @@
 和合成任务(jd_crazy_joy_compose.js)
 * 2、多个账号通过promise.all并发+eval执行, 降低执行时间, 实现参见index.js
 
+> TODO 去掉6秒倍数时间运行的限制，避免多人一起访问
