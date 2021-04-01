@@ -1,5 +1,5 @@
 /*
- 整点京豆雨，每小时6豆
+ 整点京豆雨，每天6*16豆
  已支持IOS双京东账号,Node.js支持N个京东账号
  脚本兼容: QuantumultX, Surge, Loon, JSBox, Node.js
  ============Quantumultx===============
@@ -192,7 +192,9 @@ function receiveRedRain() {
   })
 }
 
-function redRainId(url = 'https://cdn.jsdelivr.net/gh/nianyuguai/longzhuzhu@master/jd-live-rain.txt') {
+function redRainId() {
+  let url = $.isNode() ? 'https://cdn.jsdelivr.net/gh/nianyuguai/longzhuzhu@master/jd-live-rain.txt' 
+      : 'https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd-live-rain.txt'
   return new Promise(resolve => {
     let id = ''
     $.get({url}, async (err, resp, data) => {
