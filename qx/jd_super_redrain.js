@@ -2,20 +2,7 @@
  整点京豆雨，每天6*16豆
  已支持IOS双京东账号,Node.js支持N个京东账号
  脚本兼容: QuantumultX, Surge, Loon, JSBox, Node.js
- ============Quantumultx===============
- [task_local]
- #整点京豆雨
- 1 8-23 * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_super_redrain.js, tag=整点京豆雨, enabled=true
 
- ================Loon==============
- [Script]
- cron "1 8-23 * * *" script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_super_redrain.js,tag=整点京豆雨
-
- ===============Surge=================
- 整点京豆雨 = type=cron,cronexp="1 8-23 * * *",wake-system=1,timeout=20,script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_super_redrain.js
-
- ============小火箭=========
- 整点京豆雨 = type=cron,script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/jd_super_redrain.js, cronexpr="1 8-23 * * *", timeout=200, enable=true
 */
 const $ = new Env('整点京豆雨');
 let allMessage = '';
