@@ -25,9 +25,9 @@ let bodyList = {
         body: 'body=%7B%22liveId%22%3A%223689733%22%7D'
     }
 }
-const notify = $.isNode() ? require('./../sendNotify') : '';
+const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
-const jdCookieNode = $.isNode() ? require('./../jdCookie.js') : '';
+const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '', message;
