@@ -5,17 +5,17 @@
 
 [task_local]
 #直播间抽奖（全局）
-5 8-23/1 * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_live_lottery_social.js, tag=直播间抽奖（全局）, enabled=true
+5 8-19/1 0/2 * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_live_lottery_social.js, tag=直播间抽奖（全局）, enabled=true
 
 ================Loon==============
 [Script]
-cron "5 8-23/1 * * *" script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_live_lottery_social.js,tag=直播间抽奖（全局）
+cron "5 8-19/1 0/2 * *" script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_live_lottery_social.js,tag=直播间抽奖（全局）
 
 ===============Surge=================
-直播间抽奖（全局） = type=cron,cronexp="5 8-23/1 * * *",wake-system=1,timeout=20,script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_live_lottery_social.js
+直播间抽奖（全局） = type=cron,cronexp="5 8-19/1 0/2 * *",wake-system=1,timeout=20,script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_live_lottery_social.js
 
 ============小火箭=========
-直播间抽奖（全局）= type=cron,script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_live_lottery_social.js, cronexpr="5 8-23/1 * * *",timeout=200, enable=true
+直播间抽奖（全局）= type=cron,script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_live_lottery_social.js, cronexpr="5 8-19/1 0/2 * *",timeout=200, enable=true
  */
 
 const $ = new Env('直播间抽奖（全局）');
