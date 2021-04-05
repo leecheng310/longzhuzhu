@@ -202,7 +202,11 @@ function redRainId() {
                 if (err) {
                     console.log(`${JSON.stringify(err)}`)
                 } else {
-                    id = data.replace(/[\r\n]/g,"")
+                    if(!!data){
+                        id = data.replace(/[\r\n]/g,"")
+                    }else{
+                        id = ''
+                    }
                 }
             } catch (e) {
                 $.logErr(e, resp)
