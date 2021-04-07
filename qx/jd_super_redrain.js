@@ -59,7 +59,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
 
     console.log(`远程红包雨配置获取成功: ${code}`)
     let ids = {}
-    for(let i = 8; i < 24 ; i++ ){
+    for(let i = 0; i < 24 ; i++ ){
         ids[String(i)] = code
     }
 
