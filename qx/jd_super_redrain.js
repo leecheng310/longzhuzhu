@@ -195,7 +195,7 @@ function receiveRedRain() {
 }
 
 function redRainId() {
-    let url = 'https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd-live-rain.json'
+    let url = 'https://cdn.jsdelivr.net/gh/nianyuguai/longzhuzhu@main/qx/jd-live-rain.json'
     return new Promise(resolve => {
         let id = ''
         $.get({url}, async (err, resp, data) => {
