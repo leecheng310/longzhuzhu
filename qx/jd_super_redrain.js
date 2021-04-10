@@ -53,7 +53,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
     let code = await redRainId()
 
     if(!code){
-        $.log(`今日天气晴朗☀️，没有红包雨，改日再来～`)
+        $.log(`今日龙王🐲出差，天气晴朗☀️，改日再来～`)
         return
     }
 
