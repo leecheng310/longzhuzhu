@@ -61,6 +61,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
     console.log(`远程红包雨配置获取成功: ${codeList}`)
 
     for(let codeItem of codeList){
+
         let ids = {}
         for(let i = 0; i < 24 ; i++ ){
             ids[String(i)] = codeItem
@@ -69,7 +70,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
         let hour = (new Date().getUTCHours() + 8) % 24
         if (ids[hour]) {
             $.activityId = ids[hour]
-            $.log(`本地红包雨配置获取成功`)
+            $.log(`本地红包雨配置获取成功: ${codeItem}`)
         } else {
             $.log(`无法从本地读取配置，请检查运行时间`)
             return
