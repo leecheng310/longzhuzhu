@@ -52,7 +52,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
     console.log(`获取龙王信号: ${url}`)
     console.time("redRainId")
     let code = await redRainId(url)
-    let costTime = console.time("redRainId")
+    let costTime = console.timeEnd("redRainId")
     console.log(`获取完成 ${costTime}ms`)
 
     if(!code){
