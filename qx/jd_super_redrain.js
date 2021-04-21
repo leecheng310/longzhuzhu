@@ -48,9 +48,12 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
         $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/', {"open-url": "https://bean.m.jd.com/"});
         return;
     }
-    // await getRedRain();
-
-    let code = await redRainId()
+    let url = rraUrl()
+    console.log(`获取龙王信号: ${url}`)
+    console.time("redRainId")
+    let code = await redRainId(url)
+    let costTime = console.time("redRainId")
+    console.log(`获取完成 ${costTime}ms`)
 
     if(!code){
         $.log(`今日龙王🐲出差，天气晴朗☀️，改日再来～\n`)
@@ -58,7 +61,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
     }
 
     let codeList = code.split(";")
-    console.log(`远程红包雨配置获取成功: ${codeList}`)
+    console.log(`龙王就位: ${codeList}`)
 
     for(let codeItem of codeList){
 
@@ -70,7 +73,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
         let hour = (new Date().getUTCHours() + 8) % 24
         if (ids[hour]) {
             $.activityId = ids[hour]
-            $.log(`本地红包雨配置获取成功: ${codeItem}`)
+            $.log(`RRA: ${codeItem}`)
         } else {
             $.log(`无法从本地读取配置，请检查运行时间`)
             return
@@ -201,8 +204,7 @@ function receiveRedRain() {
     })
 }
 
-function redRainId() {
-    let url = rraUrl()
+function redRainId(url) {
     return new Promise(resolve => {
         let id = ''
         $.get({url}, async (err, resp, data) => {
