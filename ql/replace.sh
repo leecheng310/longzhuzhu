@@ -13,7 +13,7 @@ echo '下载完成, 执行文件替换'
 cp ${LONG_DIR}/ql/api/cookie.ts /ql/back/api
 cp ${LONG_DIR}/ql/services/cookie.ts /ql/back/services
 cp ${LONG_DIR}/ql/pages/index.tsx /ql/src/pages/cookie
-echo '替换完成, 重启面板...'
+echo '替换完成, 重启面板'
 rebuild >> ${QL_DIR}/log/rebuild.log 2>&1
 echo '重启面板OK'
 
