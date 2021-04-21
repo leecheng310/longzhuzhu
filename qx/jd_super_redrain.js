@@ -202,7 +202,7 @@ function receiveRedRain() {
 }
 
 function redRainId() {
-    let url = 'http://jd-1255594201.file.myqcloud.com/jd-live-rain-v2.json'
+    let url = 'http://jd-1255594201.file.myqcloud.com/jd-live-rain.json'
     return new Promise(resolve => {
         let id = ''
         $.get({url}, async (err, resp, data) => {
