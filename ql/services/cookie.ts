@@ -5,23 +5,29 @@ import { getFileContentByName } from '../config/util';
 import config from '../config';
 import * as fs from 'fs';
 import got from 'got';
-
-enum Status {
-  '正常',
-  '失效',
-  '状态异常',
-}
+import DataStore from 'nedb';
+import { Cookie, CookieStatus, initCookiePosition } from '../data/cookie';
 
 @Service()
 export default class CookieService {
-  private cookies: string = '';
+  private gCookies: string = '';
   private s_token: string = '';
   private guid: string = '';
   private lsid: string = '';
   private lstoken: string = '';
   private okl_token: string = '';
   private token: string = '';
-  constructor(@Inject('logger') private logger: winston.Logger) {}
+  private cronDb = new DataStore({ filename: config.cookieDbFile });
+  constructor(@Inject('logger') private logger: winston.Logger) {
+    this.cronDb.loadDatabase((err) => {
+      if (err) throw err;
+    });
+  }
+
+  public async getCookies() {
+    const content = getFileContentByName(config.cookieFile);
+    return this.formatCookie(content.split('\n').filter((x) => !!x));
+  }
 
   public async getQrUrl(): Promise<{ qrurl: string }> {
     await this.step1();
@@ -44,9 +50,9 @@ export default class CookieService {
           Accept: 'application/json, text/plain, */*',
           'Accept-Language': 'zh-cn',
           Referer:
-            'https://plogin.m.jd.com/login/login?appid=300&returnurl=https://wq.jd.com/passport/LoginRedirect?state=' +
-            timeStamp +
-            '&returnurl=https://home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action&source=wq_passport',
+          'https://plogin.m.jd.com/login/login?appid=300&returnurl=https://wq.jd.com/passport/LoginRedirect?state=' +
+          timeStamp +
+          '&returnurl=https://home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action&source=wq_passport',
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36',
           Host: 'plogin.m.jd.com',
@@ -60,7 +66,7 @@ export default class CookieService {
 
   private async step2() {
     try {
-      if (this.cookies == '') {
+      if (this.gCookies == '') {
         return '';
       }
       let timeStamp = new Date().getTime();
@@ -76,20 +82,20 @@ export default class CookieService {
           lang: 'chs',
           appid: 300,
           returnurl:
-            'https://wqlogin2.jd.com/passport/LoginRedirect?state=' +
-            timeStamp +
-            '&returnurl=//home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action',
+          'https://wqlogin2.jd.com/passport/LoginRedirect?state=' +
+          timeStamp +
+          '&returnurl=//home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action',
           source: 'wq_passport',
         }),
         headers: {
           Connection: 'Keep-Alive',
           'Content-Type': 'application/x-www-form-urlencoded; Charset=UTF-8',
           Accept: 'application/json, text/plain, */*',
-          Cookie: this.cookies,
+          Cookie: this.gCookies,
           Referer:
-            'https://plogin.m.jd.com/login/login?appid=300&returnurl=https://wqlogin2.jd.com/passport/LoginRedirect?state=' +
-            timeStamp +
-            '&returnurl=//home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action&source=wq_passport',
+          'https://plogin.m.jd.com/login/login?appid=300&returnurl=https://wqlogin2.jd.com/passport/LoginRedirect?state=' +
+          timeStamp +
+          '&returnurl=//home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action&source=wq_passport',
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36',
           Host: 'plogin.m.jd.com',
@@ -116,7 +122,7 @@ export default class CookieService {
     this.guid = setCookies.match(/guid=(.+?);/)[1];
     this.lsid = setCookies.match(/lsid=(.+?);/)[1];
     this.lstoken = setCookies.match(/lstoken=(.+?);/)[1];
-    this.cookies =
+    this.gCookies =
       'guid=' +
       this.guid +
       '; lang=chs; lsid=' +
@@ -135,7 +141,7 @@ export default class CookieService {
     var pwdt_id = setCookies[4].match(/pwdt_id=(.+?);/)[1];
     var s_key = setCookies[5].match(/s_key=(.+?);/)[1];
     var s_pin = setCookies[6].match(/s_pin=(.+?);/)[1];
-    this.cookies =
+    this.gCookies =
       'TrackerID=' +
       TrackerID +
       '; pt_key=' +
@@ -160,17 +166,21 @@ export default class CookieService {
     if (res.body.errcode === 0) {
       let ucookie = this.getCookie(res);
       let pin = ucookie.split(";")[1]
-      let content = getFileContentByName(config.cookieFile);
-      const cookies = content.split('\n').filter((x) => !!x);
-      const index = cookies.map(item => item.split(";")[1]).findIndex((x) => x === pin);
+
+      const cookieList = await this.cookies();
+
+      const index = cookieList.map(item => item.value.split(";")[1]).findIndex((x) => x === pin)
+
       if (index !== -1) {
-        cookies[index] = ucookie;
-        fs.writeFileSync(config.cookieFile, cookies.join('\n'));
+        let item = cookieList[index]
+        item.value = ucookie
+        await this.update(item)
       } else {
-        const result = cookies.concat(ucookie);
-        fs.writeFileSync(config.cookieFile, result.join('\n'));
+        let cookieAttr = []
+        cookieAttr.push(ucookie)
+        await this.create(cookieAttr)
       }
-      return { cookie: ucookie };
+      return { cookie: ucookie }
     } else {
       return res.body;
     }
@@ -212,7 +222,7 @@ export default class CookieService {
 
   private async checkLogin() {
     try {
-      if (this.cookies == '') {
+      if (this.gCookies == '') {
         return '';
       }
       let timeStamp = new Date().getTime();
@@ -235,7 +245,7 @@ export default class CookieService {
             'https://plogin.m.jd.com/login/login?appid=300&returnurl=https://wqlogin2.jd.com/passport/LoginRedirect?state=' +
             timeStamp +
             '&returnurl=//home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action&source=wq_passport',
-          Cookie: this.cookies,
+          Cookie: this.gCookies,
           Connection: 'Keep-Alive',
           'Content-Type': 'application/x-www-form-urlencoded; Charset=UTF-8',
           Accept: 'application/json, text/plain, */*',
@@ -250,11 +260,6 @@ export default class CookieService {
       res.headers = {};
       return res;
     }
-  }
-
-  public async getCookies() {
-    const content = getFileContentByName(config.cookieFile);
-    return this.formatCookie(content.split('\n').filter((x) => !!x));
   }
 
   private async formatCookie(data: any[]) {
@@ -280,14 +285,13 @@ export default class CookieService {
     return result;
   }
 
-  public async refreshCookie(body: any) {
-    const { cookie } = body;
-    const { nickname, status } = await this.getJdInfo(cookie);
+  public async refreshCookie(_id: string) {
+    const current = await this.get(_id);
+    const { status, nickname } = await this.getJdInfo(current.value);
     return {
-      pin: cookie.match(/pt_pin=(.+?);/)[1],
-      cookie,
+      ...current,
       status,
-      nickname: nickname,
+      nickname,
     };
   }
 
@@ -312,11 +316,172 @@ export default class CookieService {
       .then((x) => x.json())
       .then((x) => {
         if (x.retcode === '0' && x.data && x.data.userInfo) {
-          return { nickname: x.data.userInfo.baseInfo.nickname, status: 0 };
+          return {
+            nickname: x.data.userInfo.baseInfo.nickname,
+            status: CookieStatus.normal,
+          };
         } else if (x.retcode === 13) {
-          return { status: 1, nickname: '-' };
+          return { status: CookieStatus.invalid, nickname: '-' };
         }
-        return { status: 2, nickname: '-' };
+        return { status: CookieStatus.abnormal, nickname: '-' };
       });
+  }
+
+  public async create(payload: string[]): Promise<Cookie[]> {
+    const cookies = await this.cookies('');
+    let position = initCookiePosition;
+    if (cookies && cookies.length > 0) {
+      position = cookies[cookies.length - 1].position;
+    }
+    const tabs = payload.map((x) => {
+      const cookie = new Cookie({ value: x, position });
+      position = position / 2;
+      cookie.position = position;
+      return cookie;
+    });
+    const docs = await this.insert(tabs);
+    await this.set_cookies();
+    return docs;
+  }
+
+  public async insert(payload: Cookie[]): Promise<Cookie[]> {
+    return new Promise((resolve) => {
+      this.cronDb.insert(payload, (err, docs) => {
+        if (err) {
+          this.logger.error(err);
+        } else {
+          resolve(docs);
+        }
+      });
+    });
+  }
+
+  public async update(payload: Cookie): Promise<Cookie> {
+    const { _id, ...other } = payload;
+    const doc = await this.get(_id);
+    const tab = new Cookie({ ...doc, ...other });
+    const newDoc = await this.updateDb(tab);
+    await this.set_cookies();
+    return newDoc;
+  }
+
+  public async updateDb(payload: Cookie): Promise<Cookie> {
+    return new Promise((resolve) => {
+      this.cronDb.update(
+        { _id: payload._id },
+        payload,
+        { returnUpdatedDocs: true },
+        (err, docs) => {
+          if (err) {
+            this.logger.error(err);
+          } else {
+            resolve(docs as Cookie);
+          }
+        },
+      );
+    });
+  }
+
+  public async remove(_id: string) {
+    this.cronDb.remove({ _id }, {});
+    await this.set_cookies();
+  }
+
+  public async move(
+    _id: string,
+    {
+      fromIndex,
+      toIndex,
+    }: {
+      fromIndex: number;
+      toIndex: number;
+    },
+  ) {
+    let targetPosition: number;
+    const isUpward = fromIndex > toIndex;
+    const cookies = await this.cookies();
+    if (toIndex === 0 || toIndex === cookies.length - 1) {
+      targetPosition = isUpward
+        ? cookies[0].position * 2
+        : cookies[toIndex].position / 2;
+    } else {
+      targetPosition = isUpward
+        ? (cookies[toIndex].position + cookies[toIndex - 1].position) / 2
+        : (cookies[toIndex].position + cookies[toIndex + 1].position) / 2;
+    }
+    this.update({
+      _id,
+      position: targetPosition,
+    });
+    await this.set_cookies();
+  }
+
+  public async cookies(
+    searchText?: string,
+    sort: any = { position: -1 },
+  ): Promise<Cookie[]> {
+    let query = {};
+    if (searchText) {
+      const reg = new RegExp(searchText);
+      query = {
+        $or: [
+          {
+            name: reg,
+          },
+          {
+            command: reg,
+          },
+        ],
+      };
+    }
+    return new Promise((resolve) => {
+      this.cronDb
+        .find(query)
+        .sort({ ...sort })
+        .exec((err, docs) => {
+          resolve(docs);
+        });
+    });
+  }
+
+  public async get(_id: string): Promise<Cookie> {
+    return new Promise((resolve) => {
+      this.cronDb.find({ _id }).exec((err, docs) => {
+        resolve(docs[0]);
+      });
+    });
+  }
+
+  public async getBySort(sort: any): Promise<Cookie> {
+    return new Promise((resolve) => {
+      this.cronDb
+        .find({})
+        .sort({ ...sort })
+        .limit(1)
+        .exec((err, docs) => {
+          resolve(docs[0]);
+        });
+    });
+  }
+
+  public async disabled(_id: string) {
+    this.cronDb.update({ _id }, { $set: { status: CookieStatus.disabled } });
+    await this.set_cookies();
+  }
+
+  public async enabled(_id: string) {
+    this.cronDb.update({ _id }, { $set: { status: CookieStatus.noacquired } });
+  }
+
+  private async set_cookies() {
+    const cookies = await this.cookies();
+    let cookie_string = '';
+    cookies.forEach((tab) => {
+      if (tab.status !== CookieStatus.disabled) {
+        cookie_string += tab.value;
+        cookie_string += '\n';
+      }
+    });
+    fs.writeFileSync(config.cookieFile, cookie_string);
   }
 }

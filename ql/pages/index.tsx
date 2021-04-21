@@ -1,0 +1,553 @@
+import React, { useCallback, useRef, useState, useEffect } from 'react';
+import {
+  Button,
+  notification,
+  Modal,
+  Table,
+  Tag,
+  Space,
+  Typography,
+  Tooltip,
+} from 'antd';
+import {
+  EditOutlined,
+  DeleteOutlined,
+  SyncOutlined,
+  CheckCircleOutlined,
+  StopOutlined,
+} from '@ant-design/icons';
+import config from '@/utils/config';
+import { PageContainer } from '@ant-design/pro-layout';
+import { request } from '@/utils/http';
+import QRCode from 'qrcode.react';
+import CookieModal from './modal';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import './index.less';
+
+const { Text } = Typography;
+
+enum Status {
+  '未获取',
+  '正常',
+  '已禁用',
+  '已失效',
+  '状态异常',
+}
+
+enum StatusColor {
+  'default',
+  'success',
+  'warning',
+  'error',
+}
+
+const type = 'DragableBodyRow';
+
+const DragableBodyRow = ({
+  index,
+  moveRow,
+  className,
+  style,
+  ...restProps
+}: any) => {
+  const ref = useRef();
+  const [{ isOver, dropClassName }, drop] = useDrop(
+    () => ({
+      accept: type,
+      collect: (monitor) => {
+        const { index: dragIndex } = monitor.getItem() || ({} as any);
+        if (dragIndex === index) {
+          return {};
+        }
+        return {
+          isOver: monitor.isOver(),
+          dropClassName:
+            dragIndex < index ? ' drop-over-downward' : ' drop-over-upward',
+        };
+      },
+      drop: (item: any) => {
+        moveRow(item.index, index);
+      },
+    }),
+    [index],
+  );
+  const [, drag, preview] = useDrag(
+    () => ({
+      type,
+      item: { index },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+    }),
+    [index],
+  );
+  drop(drag(ref));
+
+  return (
+    <tr
+      ref={ref}
+      className={`${className}${isOver ? dropClassName : ''}`}
+      style={{ cursor: 'move', ...style }}
+      {...restProps}
+    >
+      {restProps.children}
+    </tr>
+  );
+};
+
+const Config = () => {
+  const columns = [
+    {
+      title: '序号',
+      align: 'center' as const,
+      render: (text: string, record: any, index: number) => {
+        return <span style={{ cursor: 'text' }}>{index + 1} </span>;
+      },
+    },
+    {
+      title: '用户名',
+      dataIndex: 'pin',
+      key: 'pin',
+      align: 'center' as const,
+      render: (text: string, record: any) => {
+        const match = record.value.match(/pt_pin=([^; ]+)(?=;?)/);
+        const val = (match && match[1]) || '未匹配用户名';
+        return <span style={{ cursor: 'text' }}>{decodeUrl(val)}</span>;
+      },
+    },
+    {
+      title: '昵称',
+      dataIndex: 'nickname',
+      key: 'nickname',
+      align: 'center' as const,
+      width: '15%',
+      render: (text: string, record: any, index: number) => {
+        return (
+          <span style={{ cursor: 'text' }}>{record.nickname || '-'} </span>
+        );
+      },
+    },
+    {
+      title: '值',
+      dataIndex: 'value',
+      key: 'value',
+      align: 'center' as const,
+      width: '50%',
+      render: (text: string, record: any) => {
+        return (
+          <span
+            style={{
+              textAlign: 'left',
+              display: 'inline-block',
+              wordBreak: 'break-all',
+              cursor: 'text',
+            }}
+          >
+            {text}
+          </span>
+        );
+      },
+    },
+    {
+      title: '状态',
+      key: 'status',
+      dataIndex: 'status',
+      align: 'center' as const,
+      width: '15%',
+      render: (text: string, record: any, index: number) => {
+        return (
+          <Space size="middle" style={{ cursor: 'text' }}>
+            <Tag
+              color={StatusColor[record.status] || StatusColor[3]}
+              style={{ marginRight: 0 }}
+            >
+              {Status[record.status]}
+            </Tag>
+            {record.status !== Status.已禁用 && (
+              <Tooltip title="刷新">
+                <a onClick={() => refreshStatus(record, index)}>
+                  <SyncOutlined />
+                </a>
+              </Tooltip>
+            )}
+          </Space>
+        );
+      },
+    },
+    {
+      title: '操作',
+      key: 'action',
+      align: 'center' as const,
+      render: (text: string, record: any, index: number) => (
+        <Space size="middle">
+          <Tooltip title="编辑">
+            <a onClick={() => editCookie(record, index)}>
+              <EditOutlined />
+            </a>
+          </Tooltip>
+          <Tooltip title={record.status === Status.已禁用 ? '启用' : '禁用'}>
+            <a onClick={() => enabledOrDisabledCron(record, index)}>
+              {record.status === Status.已禁用 ? (
+                <CheckCircleOutlined />
+              ) : (
+                <StopOutlined />
+              )}
+            </a>
+          </Tooltip>
+          <Tooltip title="删除">
+            <a onClick={() => deleteCookie(record, index)}>
+              <DeleteOutlined />
+            </a>
+          </Tooltip>
+        </Space>
+      ),
+    },
+  ];
+  const [width, setWdith] = useState('100%');
+  const [marginLeft, setMarginLeft] = useState(0);
+  const [marginTop, setMarginTop] = useState(-72);
+  const [value, setValue] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editedCookie, setEditedCookie] = useState();
+
+  const getCookies = () => {
+    setLoading(true);
+    request
+      .get(`${config.apiPrefix}cookies`)
+      .then((data: any) => {
+        setValue(data.data);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  const decodeUrl = (val: string) => {
+    try {
+      const newUrl = decodeURIComponent(val);
+      return newUrl;
+    } catch (error) {
+      return val;
+    }
+  };
+
+  const showQrCode = (oldCookie?: string) => {
+    request.get(`${config.apiPrefix}qrcode`).then(async (data) => {
+      if (data.qrcode) {
+        const modal = Modal.info({
+          title: '二维码',
+          content: (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                marginLeft: -38,
+              }}
+            >
+              <QRCode
+                style={{
+                  width: 200,
+                  height: 200,
+                  marginBottom: 10,
+                  marginTop: 20,
+                }}
+                value={data.qrcode}
+              />
+            </div>
+          ),
+        });
+        getCookie(modal, oldCookie);
+      } else {
+        notification.error({ message: '获取二维码失败' });
+      }
+    });
+  };
+
+  const getCookie = async (
+    modal: { destroy: () => void },
+    oldCookie: string = '',
+  ) => {
+    for (let i = 0; i < 50; i++) {
+      const {
+        data: { cookie, errcode, message },
+      } = await request.get(`${config.apiPrefix}cookie?cookie=${oldCookie}`);
+      if (cookie) {
+        notification.success({
+          message: 'Cookie获取成功',
+        });
+        modal.destroy();
+        Modal.success({
+          title: '获取Cookie成功',
+          content: <div>{cookie}</div>,
+        });
+        getCookies();
+        break;
+      }
+      if (errcode !== 176) {
+        notification.error({ message });
+        break;
+      }
+      await sleep(2000);
+    }
+  };
+
+  const reacquire = async (record: any) => {
+    await showQrCode(record.cookie);
+  };
+
+  useEffect(() => {
+    if (value && loading) {
+      asyncUpdateStatus();
+    }
+  }, [value]);
+
+  const asyncUpdateStatus = async () => {
+    for (let i = 0; i < value.length; i++) {
+      const cookie = value[i];
+      if (cookie.status === Status.已禁用) {
+        continue;
+      }
+      await sleep(1000);
+      location.pathname === '/cookie' && refreshStatus(cookie, i);
+    }
+  };
+
+  const sleep = (time: number) => {
+    return new Promise((resolve) => setTimeout(resolve, time));
+  };
+
+  const refreshStatus = (record: any, index: number) => {
+    request
+      .get(`${config.apiPrefix}cookies/${record._id}/refresh`)
+      .then(async (data: any) => {
+        if (data.data && data.data.value) {
+          (value as any).splice(index, 1, data.data);
+          setValue([...(value as any)] as any);
+        } else {
+          notification.error({ message: '更新状态失败' });
+        }
+      });
+  };
+
+  const enabledOrDisabledCron = (record: any, index: number) => {
+    Modal.confirm({
+      title: `确认${record.status === Status.已禁用 ? '启用' : '禁用'}`,
+      content: (
+        <>
+          确认{record.status === Status.已禁用 ? '启用' : '禁用'}
+          Cookie{' '}
+          <Text style={{ wordBreak: 'break-all' }} type="warning">
+            {record.value}
+          </Text>{' '}
+          吗
+        </>
+      ),
+      onOk() {
+        request
+          .get(
+            `${config.apiPrefix}cookies/${record._id}/${
+              record.status === Status.已禁用 ? 'enable' : 'disable'
+            }`,
+            {
+              data: { _id: record._id },
+            },
+          )
+          .then((data: any) => {
+            if (data.code === 200) {
+              notification.success({
+                message: `${
+                  record.status === Status.已禁用 ? '启用' : '禁用'
+                }成功`,
+              });
+              const newStatus =
+                record.status === Status.已禁用 ? Status.未获取 : Status.已禁用;
+              const result = [...value];
+              result.splice(index, 1, {
+                ...record,
+                status: newStatus,
+              });
+              setValue(result);
+            } else {
+              notification.error({
+                message: data,
+              });
+            }
+          });
+      },
+      onCancel() {
+        console.log('Cancel');
+      },
+    });
+  };
+
+  const addCookie = () => {
+    setIsModalVisible(true);
+  };
+
+  const editCookie = (record: any, index: number) => {
+    setEditedCookie(record);
+    setIsModalVisible(true);
+  };
+
+  const deleteCookie = (record: any, index: number) => {
+    Modal.confirm({
+      title: '确认删除',
+      content: (
+        <>
+          确认删除Cookie{' '}
+          <Text style={{ wordBreak: 'break-all' }} type="warning">
+            {record.value}
+          </Text>{' '}
+          吗
+        </>
+      ),
+      onOk() {
+        request
+          .delete(`${config.apiPrefix}cookies/${record._id}`)
+          .then((data: any) => {
+            if (data.code === 200) {
+              notification.success({
+                message: '删除成功',
+              });
+              const result = [...value];
+              result.splice(index, 1);
+              setValue(result);
+            } else {
+              notification.error({
+                message: data,
+              });
+            }
+          });
+      },
+      onCancel() {
+        console.log('Cancel');
+      },
+    });
+  };
+
+  const handleCancel = (cookies: any[]) => {
+    setIsModalVisible(false);
+    if (cookies && cookies.length > 0) {
+      handleCookies(cookies);
+    }
+  };
+
+  const handleCookies = (cookies: any[]) => {
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i];
+      const index = value.findIndex((x) => x._id === cookie._id);
+      const result = [...value];
+      if (index === -1) {
+        result.push(cookie);
+      } else {
+        result.splice(index, 1, {
+          ...cookie,
+        });
+      }
+      setValue(result);
+      refreshStatus(cookie, index);
+    }
+  };
+
+  const components = {
+    body: {
+      row: DragableBodyRow,
+    },
+  };
+
+  const moveRow = useCallback(
+    (dragIndex, hoverIndex) => {
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+      const dragRow = value[dragIndex];
+      const newData = [...value];
+      newData.splice(dragIndex, 1);
+      newData.splice(hoverIndex, 0, dragRow);
+      setValue([...newData]);
+      request
+        .put(`${config.apiPrefix}cookies/${dragRow._id}/move`, {
+          data: { fromIndex: dragIndex, toIndex: hoverIndex },
+        })
+        .then((data: any) => {
+          if (data.code !== 200) {
+            notification.error({
+              message: data,
+            });
+          }
+        });
+    },
+    [value],
+  );
+
+  useEffect(() => {
+    if (document.body.clientWidth < 768) {
+      setWdith('auto');
+      setMarginLeft(0);
+      setMarginTop(0);
+    } else {
+      setWdith('100%');
+      setMarginLeft(0);
+      setMarginTop(-72);
+    }
+    getCookies();
+  }, []);
+
+  return (
+    <PageContainer
+      className="cookie-wrapper"
+      title="Cookie管理"
+      loading={loading}
+      extra={[
+        <Button key="1" type="primary" onClick={() => showQrCode()}>
+          二维码登录
+        </Button>,
+        <Button key="2" type="primary" onClick={() => addCookie()}>
+          添加Cookie
+        </Button>,
+      ]}
+      header={{
+        style: {
+          padding: '4px 16px 4px 15px',
+          position: 'sticky',
+          top: 0,
+          left: 0,
+          zIndex: 20,
+          marginTop,
+          width,
+          marginLeft,
+        },
+      }}
+      style={{
+        height: '100vh',
+      }}
+    >
+      <DndProvider backend={HTML5Backend}>
+        <Table
+          columns={columns}
+          pagination={false}
+          dataSource={value}
+          rowKey="value"
+          size="middle"
+          bordered
+          scroll={{ x: 768 }}
+          components={components}
+          onRow={(record, index) => {
+            return {
+              index,
+              moveRow,
+            } as any;
+          }}
+        />
+      </DndProvider>
+      <CookieModal
+        visible={isModalVisible}
+        handleCancel={handleCancel}
+        cookie={editedCookie}
+      />
+    </PageContainer>
+  );
+};
+
+export default Config;

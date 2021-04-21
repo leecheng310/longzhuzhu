@@ -57,45 +57,52 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
         return
     }
 
-    console.log(`远程红包雨配置获取成功: ${code}`)
-    let ids = {}
-    for(let i = 0; i < 24 ; i++ ){
-        ids[String(i)] = code
-    }
+    let codeList = code.split(";")
+    console.log(`远程红包雨配置获取成功: ${codeList}`)
 
-    let hour = (new Date().getUTCHours() + 8) % 24
-    if (ids[hour]) {
-        $.activityId = ids[hour]
-        $.log(`本地红包雨配置获取成功`)
-    } else {
-        $.log(`无法从本地读取配置，请检查运行时间`)
-        return
-    }
+    for(let codeItem of codeList){
 
-    for (let i = 0; i < cookiesArr.length; i++) {
-        if (cookiesArr[i]) {
-            cookie = cookiesArr[i];
-            $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
-            $.index = i + 1;
-            $.isLogin = true;
-            $.nickName = '';
-            message = '';
-            await TotalBean();
-            console.log(`\n******开始【京东账号${$.index}】${$.nickName || $.UserName}*********\n`);
-            if (!$.isLogin) {
-                $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/`, {"open-url": "https://bean.m.jd.com/"});
+        let ids = {}
+        for(let i = 0; i < 24 ; i++ ){
+            ids[String(i)] = codeItem
+        }
 
-                if ($.isNode()) {
-                    await notify.sendNotify(`${$.name}cookie已失效 - ${$.UserName}`, `京东账号${$.index} ${$.UserName}\n请重新登录获取cookie`);
+        let hour = (new Date().getUTCHours() + 8) % 24
+        if (ids[hour]) {
+            $.activityId = ids[hour]
+            $.log(`本地红包雨配置获取成功: ${codeItem}`)
+        } else {
+            $.log(`无法从本地读取配置，请检查运行时间`)
+            return
+        }
+
+        for (let i = 0; i < cookiesArr.length; i++) {
+            if (cookiesArr[i]) {
+                cookie = cookiesArr[i];
+                $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
+                $.index = i + 1;
+                $.isLogin = true;
+                $.nickName = '';
+                message = '';
+                await TotalBean();
+                console.log(`\n******开始【京东账号${$.index}】${$.nickName || $.UserName}*********\n`);
+                if (!$.isLogin) {
+                    $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/`, {"open-url": "https://bean.m.jd.com/"});
+
+                    if ($.isNode()) {
+                        await notify.sendNotify(`${$.name}cookie已失效 - ${$.UserName}`, `京东账号${$.index} ${$.UserName}\n请重新登录获取cookie`);
+                    }
+                    continue
                 }
-                continue
+                let nowTs = new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000
+
+                await receiveRedRain();
+                // await showMsg();
             }
-            let nowTs = new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000
-            
-            await receiveRedRain();
-            // await showMsg();
         }
     }
+
+
     if (allMessage) {
         if ($.isNode()) await notify.sendNotify(`${$.name}`, `${allMessage}`);
         $.msg($.name, '', allMessage);
@@ -176,7 +183,7 @@ function receiveRedRain() {
                             console.log(`领取成功，获得${JSON.stringify(data.lotteryResult)}`)
                             // message+= `领取成功，获得${JSON.stringify(data.lotteryResult)}\n`
                             message += `领取成功，获得 ${(data.lotteryResult.jPeasList[0].quantity)}京豆`
-                            allMessage += `京东账号${$.index}${$.nickName || $.UserName}\n领取成功，获得 ${(data.lotteryResult.jPeasList[0].quantity)}京豆${$.index !== cookiesArr.length ? '\n\n' : ''}`;
+                            allMessage += `京东账号${$.index}${$.nickName || $.UserName}\n领取成功，获得 ${(data.lotteryResult.jPeasList[0].quantity)}京豆${$.index !== cookiesArr.length ? '\n\n' : '\n\n'}`;
                         } else if (data.subCode === '8') {
                             console.log(`今日次数已满`)
                             message += `领取失败，本场已领过`;
@@ -195,7 +202,6 @@ function receiveRedRain() {
 }
 
 function redRainId() {
-    //let url = 'http://jd-1255594201.file.myqcloud.com/jd-live-rain.json'
     let url = 'https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd-live-rain.json'
     return new Promise(resolve => {
         let id = ''
