@@ -50,9 +50,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
     }
     let url = rraUrl()
     console.log(`获取龙王信号: ${url}`)
-    console.time("gotUrl")
     let code = await redRainId(url)
-    console.timeEnd("gotUrl")
     console.log(`获取完成`)
 
     if(!code){
