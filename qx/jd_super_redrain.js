@@ -50,10 +50,10 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
     }
     let url = rraUrl()
     console.log(`获取龙王信号: ${url}`)
-    console.time("redRainId")
+    console.time("gotUrl")
     let code = await redRainId(url)
-    let costTime = console.timeEnd("redRainId")
-    console.log(`获取完成 ${costTime}ms`)
+    console.timeEnd("gotUrl")
+    console.log(`获取完成`)
 
     if(!code){
         $.log(`今日龙王🐲出差，天气晴朗☀️，改日再来～\n`)
