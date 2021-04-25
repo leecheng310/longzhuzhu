@@ -51,6 +51,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
     let url = rraUrl()
     console.log(`获取龙王信号: ${url}`)
     let code = await redRainId(url)
+    code = await retryCdn(code, url)
     console.log(`获取完成`)
 
     if(!code){
@@ -209,6 +210,7 @@ function redRainId(url) {
             try {
                 if (err) {
                     console.log(`${JSON.stringify(err)}`)
+                    id = 'error'
                 } else {
                     if(!!data){
                         id = data.replace(/[\r\n]/g,"")
@@ -223,6 +225,18 @@ function redRainId(url) {
             }
         })
     })
+}
+
+async function retryCdn(code, url) {
+    if (code === 'error') {
+        let items = url.split("/")
+        let fn = items[items.length-1]
+        let cndUrl = `http://jd-1255594201.file.myqcloud.com/${fn}`
+        $.log(`获取失败, 切换: ${cndUrl}`)
+        code = await redRainId(cndUrl)
+    }
+
+    return code === 'error' ? '' : code
 }
 
 function rraUrl() {
