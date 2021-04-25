@@ -232,7 +232,7 @@ async function retryCdn(code, url) {
         let items = url.split("/")
         let fn = items[items.length-1]
         let cndUrl = `http://jd-1255594201.file.myqcloud.com/${fn}`
-        $.log(`获取失败, 切换: ${cndUrl}`)
+        $.log(`获取龙王失败, 召唤神龙: ${cndUrl}`)
         code = await redRainId(cndUrl)
     }
 
