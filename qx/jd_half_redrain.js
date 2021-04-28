@@ -105,7 +105,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
     }
 
 
-    if (allMessage) {
+    if (allMessage && isNotify()) {
         if ($.isNode()) await notify.sendNotify(`${$.name}`, `${allMessage}`);
         $.msg($.name, '', allMessage);
     }
@@ -247,6 +247,15 @@ function rraUrl() {
         url = $.getdata('jdHalfRRAUrl')
     }
     return url
+}
+
+function isNotify() {
+    if($.isNode() && process.env.RAIN_NOTIFY_CONTROL){
+        return process.env.RAIN_NOTIFY_CONTROL != 'false'
+    }else if($.getdata('rainNotifyControl')){
+        return $.getdata('rainNotifyControl') != 'false'
+    }
+    return true
 }
 
 function taskGetUrl(url, body) {
