@@ -5,17 +5,17 @@
 
 [task_local]
 #半点京豆雨
-0 20-23/1 * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_half_redrain.js, tag=半点京豆雨, enabled=true
+30 20-23/1 * * * https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_half_redrain.js, tag=半点京豆雨, enabled=true
 
 ================Loon==============
 [Script]
-cron "0 20-23/1 * * *" script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_half_redrain.js,tag=半点京豆雨
+cron "30 20-23/1 * * *" script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_half_redrain.js,tag=半点京豆雨
 
 ===============Surge=================
- 半点京豆雨 = type=cron,cronexp="0 20-23/1 * * *",wake-system=1,timeout=20,script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_half_redrain.js
+ 半点京豆雨 = type=cron,cronexp="30 20-23/1 * * *",wake-system=1,timeout=20,script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_half_redrain.js
 
 ============小火箭=========
- 半点京豆雨= type=cron,script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_half_redrain.js, cronexpr="0 20-23/1 * * *",timeout=200, enable=true
+ 半点京豆雨= type=cron,script-path=https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_half_redrain.js, cronexpr="30 20-23/1 * * *",timeout=200, enable=true
  */
 const $ = new Env('半点京豆雨');
 let allMessage = '';
@@ -241,10 +241,10 @@ async function retryCdn(code, url) {
 
 function rraUrl() {
     let url = 'https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd-half-rain.json'
-    if($.isNode() && process.env.JD_RRA_URL){
-        url = process.env.JD_RRA_URL
-    }else if($.getdata('jdRRAUrl')){
-        url = $.getdata('jdRRAUrl')
+    if($.isNode() && process.env.JD_HALF_RRA_URL){
+        url = process.env.JD_HALF_RRA_URL
+    }else if($.getdata('jdHalfRRAUrl')){
+        url = $.getdata('jdHalfRRAUrl')
     }
     return url
 }
