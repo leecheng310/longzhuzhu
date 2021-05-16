@@ -1,6 +1,8 @@
 /*
 整点京豆雨，每天8*16豆
 
+boxjs订阅地址: https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/longzhuzhu.boxjs.json
+
 环境变量:
 # 关闭京豆雨通知
 export RAIN_NOTIFY_CONTROL="false"
