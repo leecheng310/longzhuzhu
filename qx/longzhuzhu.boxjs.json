@@ -9,7 +9,9 @@
       "id": "jdLiveRain",
       "name": "京豆雨",
       "keys": [
-        "rainNotifyControl"
+        "RAIN_NOTIFY_CONTROL",
+        "SUPER_RAIN_RRA",
+        "HALF_RAIN_RRA"
       ],
       "settings": [
         {
@@ -46,10 +48,10 @@
         "https://raw.githubusercontent.com/58xinian/icon/master/jd_bean_home.png"
       ],
       "author": "@nianyuguai",
-      "repo": "https://github.com/nianyuguai/longzhuzhu/tree/main/qx",
+      "repo": "https://github.com/nianyuguai/longzhuzhu",
       "script": "https://raw.githubusercontent.com/nianyuguai/longzhuzhu/main/qx/jd_super_redrain.js",
       "descs_html": [
-        "龙猪猪 作者仓库：【<a href=\"https://raw.githubusercontent.com/nianyuguai/longzhuzhu\">github</a>】",
+        "龙猪猪 作者仓库：【<a href=\"https://github.com/nianyuguai/longzhuzhu\">https://github.com/nianyuguai/longzhuzhu</a>】",
         "龙猪猪 频道：【<a href=\"https://t.me/longzhuzhu\">电报频道</a>】"
       ]
     }
