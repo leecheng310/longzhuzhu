@@ -100,7 +100,7 @@ async function lottery() {
                     if(data.data.bizCode === 0){
                         let hbInfo = data.data.result.hbInfo.discount;
                         console.log(`领取成功，获得${JSON.stringify(data.data)}`);
-                        allMessage += allMessage + `京东账号${$.index}-${$.nickName || $.UserName}\n领取成功，获得 ${hbInfo} 红包${$.index !== cookiesArr.length ? '\n\n' : '\n\n'}`;
+                        allMessage += `京东账号${$.index}-${$.nickName || $.UserName}\n领取成功，获得 ${hbInfo} 红包${$.index !== cookiesArr.length ? '\n\n' : '\n\n'}`;
                     }else if (data.data.bizCode === -1006) {
                         console.log(`次数已满: ${data.data.bizMsg}`);
                     }else {
